@@ -1,0 +1,23 @@
+# Environment
+.env
+.venv
+venv
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.so
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

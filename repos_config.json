@@ -1,0 +1,9 @@
+{
+  "repos": [
+    {
+      "id": "YOUR_GITLAB_PROJECT_ID",
+      "name": "示例仓库",
+      "branch": "main"
+    }
+  ]
+}

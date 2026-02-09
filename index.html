@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git AI 代码统计工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Flatpickr DatePicker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+    <style>
+        :root {
+            --bg-app: #09090b;
+            --bg-panel: #18181b;
+            --bg-input: #000000;
+            --accent-primary: #facc15;
+            --accent-hover: #eab308;
+            --accent-dim: rgba(250, 204, 21, 0.1);
+            --border-color: #27272a;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-app);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 99px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-primary);
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .input-area {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            transition: all 0.2s;
+        }
+
+        .input-area:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 1px var(--accent-primary);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-primary);
+            color: #000;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(250, 204, 21, 0.2);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background-color: #27272a;
+            color: #e4e4e7;
+            border: 1px solid #3f3f46;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #3f3f46;
+            border-color: #52525b;
+            color: #fff;
+        }
+
+        .date-input {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 1px var(--accent-primary);
+        }
+
+        /* Flatpickr 样式定制 */
+        .flatpickr-calendar {
+            background-color: var(--bg-panel) !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .flatpickr-months {
+            background-color: var(--bg-panel) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+        }
+
+        .flatpickr-month {
+            color: var(--text-main) !important;
+        }
+
+        .flatpickr-weekdays {
+            background-color: var(--bg-panel) !important;
+        }
+
+        .flatpickr-weekday {
+            color: var(--text-muted) !important;
+        }
+
+        .flatpickr-day {
+            color: var(--text-main) !important;
+            border: 1px solid transparent !important;
+        }
+
+        .flatpickr-day:hover {
+            background-color: var(--accent-dim) !important;
+            border-color: var(--accent-primary) !important;
+        }
+
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange {
+            background-color: var(--accent-primary) !important;
+            border-color: var(--accent-primary) !important;
+            color: #000 !important;
+        }
+
+        .flatpickr-day.today {
+            border-color: var(--accent-primary) !important;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background-color: var(--bg-panel);
+            color: white;
+            padding: 1rem 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid #27272a;
+            transform: translateY(8rem);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 50;
+        }
+
+        #toast.show {
+            transform: translateY(0);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(250, 204, 21, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result-section {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--bg-input) 0%, #18181b 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .stats-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(250, 204, 21, 0.1);
+        }
+
+        .percentage-circle {
+            width: 120px;
+            height: 120px;
+            position: relative;
+        }
+
+        .percentage-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .repo-card {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+
+        .repo-card:hover {
+            border-color: #3f3f46;
+            background-color: #18181b;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #27272a;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-hover));
+            border-radius: 99px;
+            transition: width 1s ease-out;
+        }
+
+        .dept-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dept-btn:hover {
+            border-color: var(--accent-primary);
+            background-color: var(--accent-dim);
+        }
+
+        .dept-btn.selected {
+            border-color: var(--accent-primary);
+            background-color: var(--accent-primary);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .dept-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .dept-group-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dept-repos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.75rem;
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden bg-[#09090b]">
+
+    <!-- Header -->
+    <header class="w-full bg-[#18181b] border-b border-[#27272a] flex items-center shrink-0 z-20 h-14 md:h-16">
+        <div class="px-5 flex items-center gap-3 border-r border-[#27272a] h-full shrink-0">
+            <div
+                class="w-8 h-8 bg-yellow-400/10 rounded-lg flex items-center justify-center border border-yellow-400/20">
+                <i data-lucide="bar-chart-3" class="text-yellow-400 w-5 h-5"></i>
+            </div>
+            <div class="flex flex-col justify-center">
+                <h1 class="text-base font-bold tracking-wide text-white leading-none">Git AI 代码统计工具</h1>
+            </div>
+        </div>
+
+        <div class="flex-1"></div>
+
+        <div
+            class="px-5 h-full flex flex-col justify-center items-end border-l border-[#27272a] text-xs text-zinc-500 shrink-0 hidden md:flex font-mono leading-tight">
+            <span class="font-bold text-zinc-400">v1.0</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 relative overflow-hidden flex flex-col p-4 gap-4 overflow-y-auto">
+
+        <!-- 部门选择 -->
+        <div class="shrink-0">
+            <h2 class="text-sm font-bold text-zinc-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                <i data-lucide="building-2" class="w-4 h-4"></i>
+                选择部门
+                <span class="text-xs font-normal text-zinc-500 ml-2">(可多选)</span>
+            </h2>
+            <div id="departments-list" class="flex flex-wrap gap-2">
+                <!-- 动态加载 -->
+            </div>
+        </div>
+
+        <!-- 配置的仓库列表展示 -->
+        <div class="shrink-0">
+            <h2 class="text-sm font-bold text-zinc-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                <i data-lucide="folder-git-2" class="w-4 h-4"></i>
+                仓库列表
+                <span id="selected-repo-count" class="text-xs font-normal text-zinc-500 ml-2"></span>
+            </h2>
+            <div id="repos-list" class="space-y-4">
+                <!-- 动态加载 -->
+            </div>
+        </div>
+
+        <!-- 日期选择 -->
+        <div class="shrink-0">
+            <h2 class="text-sm font-bold text-zinc-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                统计时间范围
+            </h2>
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm text-zinc-300 mb-2">开始日期</label>
+                    <input type="text" id="start-date" class="date-input w-full" placeholder="选择开始日期" readonly>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm text-zinc-300 mb-2">结束日期</label>
+                    <input type="text" id="end-date" class="date-input w-full" placeholder="选择结束日期" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="shrink-0 flex justify-end">
+            <button id="analyze-btn" onclick="analyzeStats()"
+                class="btn-primary px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg flex items-center gap-2">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                <span>开始统计</span>
+            </button>
+        </div>
+
+        <!-- 结果显示区域 -->
+        <div id="result-section" class="hidden">
+            <!-- 总体统计 -->
+            <div class="result-section mb-4">
+                <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <span class="w-1 h-6 bg-yellow-400 rounded-full"></span>
+                    总体统计
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="stats-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-zinc-400">AI 代码占比</span>
+                            <i data-lucide="trending-up" class="w-4 h-4 text-yellow-400"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-yellow-400" id="overall-percentage">0%</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-zinc-400">总代码行数</span>
+                            <i data-lucide="file-code" class="w-4 h-4 text-blue-400"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-white" id="total-lines">0</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-zinc-400">AI 生成行数</span>
+                            <i data-lucide="bot" class="w-4 h-4 text-green-400"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-white" id="ai-lines">0</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-zinc-400">提交记录</span>
+                            <i data-lucide="git-commit" class="w-4 h-4 text-purple-400"></i>
+                        </div>
+                        <div class="text-xl font-bold text-white">
+                            <span id="commits-with-ai">0</span>
+                            <span class="text-zinc-500">/</span>
+                            <span id="total-commits">0</span>
+                        </div>
+                        <div class="text-xs text-zinc-500 mt-1">含 AI / 总数</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 各仓库详情 -->
+            <div class="result-section">
+                <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <span class="w-1 h-6 bg-yellow-400 rounded-full"></span>
+                    各仓库详情
+                </h2>
+                <div id="repo-details" class="space-y-3">
+                    <!-- 动态加载 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast"
+            class="fixed bottom-6 right-6 bg-[#18181b] text-white px-5 py-4 rounded-xl shadow-2xl border border-zinc-800 transform transition-all duration-300 translate-y-32 flex items-center gap-3 z-50">
+            <div class="w-6 h-6 bg-yellow-400/10 rounded-full flex items-center justify-center">
+                <i data-lucide="check" class="w-4 h-4 text-yellow-400"></i>
+            </div>
+            <span id="toast-msg" class="text-sm font-bold">操作成功</span>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        let startDatePicker, endDatePicker;
+        let selectedDepartments = []; // 选中的部门，可多选
+        let allReposData = null;
+
+        // 加载部门列表
+        async function loadDepartments() {
+            try {
+                const response = await fetch('/git-ai-stats/repos');
+                const data = await response.json();
+
+                if (data.success) {
+                    allReposData = data; // 保存所有数据
+                    const departments = data.departments || [];
+                    
+                    const container = document.getElementById('departments-list');
+                    container.innerHTML = '';
+
+                    if (departments.length === 0) {
+                        container.innerHTML = '<div class="text-zinc-500 text-sm">未配置部门分组</div>';
+                        // 如果没有部门，直接显示所有仓库
+                        loadRepos();
+                        return;
+                    }
+
+                    departments.forEach(dept => {
+                        const btn = document.createElement('button');
+                        btn.className = 'dept-btn';
+                        btn.dataset.department = dept;
+                        
+                        // 默认选中 某个部门
+                        if (selectedDepartments.includes(dept)) {
+                            btn.classList.add('selected');
+                        }
+                        
+                        const repoCount = data.repos_by_department[dept].length;
+                        btn.innerHTML = `
+                            <i data-lucide="folder" class="w-4 h-4"></i>
+                            <span>${dept}</span>
+                            <span class="text-xs opacity-70">(${repoCount})</span>
+                        `;
+                        
+                        btn.onclick = () => toggleDepartment(dept, btn);
+                        container.appendChild(btn);
+                    });
+                    
+                    lucide.createIcons();
+                    
+                    // 加载仓库列表
+                    loadRepos();
+                } else {
+                    showToast('加载部门列表失败', 'error');
+                }
+            } catch (error) {
+                console.error('加载部门列表失败:', error);
+                showToast('加载部门列表失败', 'error');
+            }
+        }
+
+        // 切换部门选择
+        function toggleDepartment(dept, btn) {
+            const index = selectedDepartments.indexOf(dept);
+            if (index > -1) {
+                // 取消选中
+                selectedDepartments.splice(index, 1);
+                btn.classList.remove('selected');
+            } else {
+                // 选中
+                selectedDepartments.push(dept);
+                btn.classList.add('selected');
+            }
+            
+            // 更新仓库列表
+            loadRepos();
+        }
+
+        // 加载仓库列表（根据选中的部门）
+        function loadRepos() {
+            if (!allReposData) return;
+            
+            const container = document.getElementById('repos-list');
+            container.innerHTML = '';
+
+            const departments = allReposData.departments || [];
+            const reposByDepartment = allReposData.repos_by_department || {};
+
+            if (departments.length === 0) {
+                // 旧格式：没有部门分组
+                const repos = allReposData.all_repos || [];
+                displayReposInGrid(container, repos);
+                updateRepoCount(repos.length);
+                return;
+            }
+
+            // 新格式：按部门分组显示
+            let totalRepos = 0;
+            
+            selectedDepartments.forEach(dept => {
+                if (reposByDepartment[dept]) {
+                    const repos = reposByDepartment[dept];
+                    totalRepos += repos.length;
+                    
+                    // 创建部门分组
+                    const deptGroup = document.createElement('div');
+                    deptGroup.className = 'dept-group';
+                    
+                    const deptTitle = document.createElement('div');
+                    deptTitle.className = 'dept-group-title';
+                    deptTitle.innerHTML = `
+                        <i data-lucide="folder-open" class="w-4 h-4"></i>
+                        <span>${dept}</span>
+                        <span class="text-xs font-normal text-zinc-500">(${repos.length} 个仓库)</span>
+                    `;
+                    deptGroup.appendChild(deptTitle);
+                    
+                    const reposGrid = document.createElement('div');
+                    reposGrid.className = 'dept-repos-grid';
+                    
+                    repos.forEach(repo => {
+                        const card = document.createElement('div');
+                        card.className = 'repo-card';
+                        card.innerHTML = `
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 bg-yellow-400/10 rounded-lg flex items-center justify-center shrink-0">
+                                    <i data-lucide="git-branch" class="w-5 h-5 text-yellow-400"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-bold text-white truncate">${repo.name}</div>
+                                    <div class="text-xs text-zinc-500 mt-1 font-mono">ID: ${repo.id}</div>
+                                    <div class="text-xs text-zinc-500 mt-1 flex items-center gap-1">
+                                        <i data-lucide="git-branch" class="w-3 h-3"></i>
+                                        <span>${repo.branch}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        reposGrid.appendChild(card);
+                    });
+                    
+                    deptGroup.appendChild(reposGrid);
+                    container.appendChild(deptGroup);
+                }
+            });
+
+            if (totalRepos === 0) {
+                container.innerHTML = '<div class="text-center text-zinc-500 py-4">请选择至少一个部门</div>';
+            }
+
+            updateRepoCount(totalRepos);
+            lucide.createIcons();
+        }
+
+        // 显示仓库网格（无部门分组）
+        function displayReposInGrid(container, repos) {
+            if (repos.length === 0) {
+                container.innerHTML = '<div class="text-center text-zinc-500 py-4">未配置任何仓库</div>';
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'dept-repos-grid';
+            
+            repos.forEach(repo => {
+                const card = document.createElement('div');
+                card.className = 'repo-card';
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 bg-yellow-400/10 rounded-lg flex items-center justify-center shrink-0">
+                            <i data-lucide="git-branch" class="w-5 h-5 text-yellow-400"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-white truncate">${repo.name}</div>
+                            <div class="text-xs text-zinc-500 mt-1 font-mono">ID: ${repo.id}</div>
+                            <div class="text-xs text-zinc-500 mt-1 flex items-center gap-1">
+                                <i data-lucide="git-branch" class="w-3 h-3"></i>
+                                <span>${repo.branch}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            container.appendChild(grid);
+            lucide.createIcons();
+        }
+
+        // 更新仓库数量显示
+        function updateRepoCount(count) {
+            const countEl = document.getElementById('selected-repo-count');
+            if (selectedDepartments.length > 0) {
+                countEl.textContent = `(已选 ${selectedDepartments.length} 个部门，共 ${count} 个仓库)`;
+            } else {
+                countEl.textContent = `(共 ${count} 个仓库)`;
+            }
+        }
+
+        // 统计分析
+        async function analyzeStats() {
+            const startDate = startDatePicker.selectedDates[0];
+            const endDate = endDatePicker.selectedDates[0];
+
+            if (!startDate || !endDate) {
+                showToast('请选择开始日期和结束日期', 'error');
+                return;
+            }
+
+            if (startDate >= endDate) {
+                showToast('开始日期必须早于结束日期', 'error');
+                return;
+            }
+
+            // 检查是否选中了部门
+            if (allReposData && allReposData.departments && allReposData.departments.length > 0) {
+                if (selectedDepartments.length === 0) {
+                    showToast('请至少选择一个部门', 'error');
+                    return;
+                }
+            }
+
+            // 显示加载状态
+            const btn = document.getElementById('analyze-btn');
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> <span>统计中...</span>';
+
+            try {
+                const response = await fetch('/git-ai-stats/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        start_date: startDate.toISOString(),
+                        end_date: endDate.toISOString(),
+                        departments: selectedDepartments  // 传递选中的部门
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.stats);
+                    showToast(`统计完成 (${selectedDepartments.join(', ')})`);
+                } else {
+                    showToast(data.error || '统计失败', 'error');
+                }
+            } catch (error) {
+                console.error('统计失败:', error);
+                showToast('网络错误，请重试', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            }
+        }
+
+        // 显示统计结果
+        function displayResults(stats) {
+            // 更新总体统计
+            document.getElementById('overall-percentage').textContent = stats.overall_percentage + '%';
+            document.getElementById('total-lines').textContent = stats.total_lines.toLocaleString();
+            document.getElementById('ai-lines').textContent = stats.total_ai_lines.toLocaleString();
+            document.getElementById('commits-with-ai').textContent = stats.commits_with_ai;
+            document.getElementById('total-commits').textContent = stats.total_commits;
+
+            // 显示各仓库详情
+            const detailsContainer = document.getElementById('repo-details');
+            detailsContainer.innerHTML = '';
+
+            stats.repo_details.forEach(repo => {
+                const card = document.createElement('div');
+                card.className = 'repo-card';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="folder" class="w-4 h-4 text-yellow-400"></i>
+                            <span class="font-bold text-white">${repo.name}</span>
+                        </div>
+                        <span class="text-2xl font-bold text-yellow-400">${repo.percentage}%</span>
+                    </div>
+                    <div class="progress-bar mb-3">
+                        <div class="progress-fill" style="width: ${repo.percentage}%"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-zinc-500">总行数:</span>
+                            <span class="text-white font-mono ml-1">${repo.total_lines.toLocaleString()}</span>
+                        </div>
+                        <div>
+                            <span class="text-zinc-500">AI 行数:</span>
+                            <span class="text-white font-mono ml-1">${repo.ai_lines.toLocaleString()}</span>
+                        </div>
+                        <div>
+                            <span class="text-zinc-500">总提交:</span>
+                            <span class="text-white font-mono ml-1">${repo.total_commits}</span>
+                        </div>
+                        <div>
+                            <span class="text-zinc-500">含 AI:</span>
+                            <span class="text-white font-mono ml-1">${repo.commits_with_ai}</span>
+                        </div>
+                    </div>
+                `;
+                detailsContainer.appendChild(card);
+            });
+
+            lucide.createIcons();
+
+            // 显示结果区域
+            document.getElementById('result-section').classList.remove('hidden');
+        }
+
+        // Toast Notification
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msgSpan = document.getElementById('toast-msg');
+            msgSpan.textContent = msg;
+
+            const iconContainer = toast.querySelector('div');
+            const icon = toast.querySelector('svg');
+
+            if (type === 'error') {
+                iconContainer.classList.remove('bg-yellow-400/10');
+                iconContainer.classList.add('bg-red-500/10');
+                icon.setAttribute('class', 'w-4 h-4 text-red-500');
+                icon.innerHTML = '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>';
+            } else {
+                iconContainer.classList.remove('bg-red-500/10');
+                iconContainer.classList.add('bg-yellow-400/10');
+                icon.setAttribute('class', 'w-4 h-4 text-yellow-400');
+                icon.innerHTML = '<path d="M20 6 9 17l-5-5"/>';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDepartments();
+
+            // 设置默认日期（最近一周）
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 7);
+
+            // 初始化 Flatpickr 日期选择器
+            const flatpickrOptions = {
+                locale: 'zh',
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                clickOpens: true
+            };
+
+            startDatePicker = flatpickr('#start-date', {
+                ...flatpickrOptions,
+                defaultDate: startDate,
+                onChange: function (selectedDates, dateStr, instance) {
+                    if (selectedDates[0] && endDatePicker) {
+                        endDatePicker.set('minDate', selectedDates[0]);
+                        if (endDatePicker.selectedDates[0] && selectedDates[0] > endDatePicker.selectedDates[0]) {
+                            endDatePicker.setDate(selectedDates[0]);
+                        }
+                    }
+                }
+            });
+
+            endDatePicker = flatpickr('#end-date', {
+                ...flatpickrOptions,
+                defaultDate: endDate,
+                minDate: startDate
+            });
+        });
+    </script>
+</body>
+
+</html>
