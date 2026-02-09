@@ -2,6 +2,8 @@
 
 **[中文](README_ZH.md)**
 
+<img width="2120" height="1020" alt="image" src="https://github.com/user-attachments/assets/89c97370-5845-4122-8454-e993e21f5b5a" />
+
 Teams use Cursor, Copilot, and other AI tools to write code—but rarely know *how much* of the codebase is AI-generated. This tool uses [git-ai](https://github.com/git-ai-project/git-ai) Git Notes (`refs/notes/ai`) to pull commits and AI attribution from GitLab, then computes **AI code ratio** by time range, repo, or department. Results are shown in tables and charts for review, reporting, and trend tracking.
 
 **Built on [git-ai](https://github.com/git-ai-project/git-ai)** (a Git extension for tracking AI-generated code) and its [Git AI Standard](https://github.com/git-ai-project/git-ai).
