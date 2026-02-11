@@ -13,6 +13,8 @@ Teams use Cursor, Copilot, and other AI tools to write code—but rarely know *h
 - AI code ratio across multiple repos within a date range
 - Department/group config with filtering by group
 - Summary stats plus per-repo details (lines, commits, ratio)
+- **Expandable commit details**: Click any repo card to view individual commit breakdown with AI attribution
+- **Smart commit search**: For repos with 5+ commits, filter by commit ID or message in real-time
 - Dark-themed web UI with date picker and result charts
 
 ## Requirements
@@ -84,7 +86,32 @@ Edit `repos_config.json`.
 python app.py
 ```
 
-Open **http://127.0.0.1:5000** in your browser, pick a date range and optional department, then click the start button to run the stats.
+Open **http://127.0.0.1:8888** in your browser, pick a date range and optional department, then click the start button to run the stats.
+
+## Using the UI
+
+### Viewing Results
+
+After running stats, you'll see:
+- **Overall Summary**: Total AI percentage, lines of code, commits
+- **Repository Cards**: Each repo shows AI ratio, progress bar, and commit counts
+
+### Exploring Commit Details
+
+**Click any repository card** to expand and view individual commits:
+- Commit message and SHA
+- Author and date
+- Lines added vs. AI-generated lines
+- AI percentage per commit
+
+### Searching Commits
+
+When a repository has **more than 5 commits**, a search box appears automatically:
+- **Filter by commit ID**: Type any part of the SHA (e.g., `a3f2b`)
+- **Filter by message**: Search commit messages (e.g., `fix bug`, `add feature`)
+- **Real-time filtering**: Results update as you type
+- **Dynamic count**: Shows how many commits match your search
+- **Clear search**: Remove search text to show all commits again
 
 ## How it works
 

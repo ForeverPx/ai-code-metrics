@@ -244,11 +244,73 @@
             border-radius: 0.5rem;
             padding: 1rem;
             transition: all 0.2s;
+            cursor: pointer;
         }
 
         .repo-card:hover {
             border-color: #3f3f46;
             background-color: #18181b;
+        }
+
+        .repo-card.expanded {
+            border-color: var(--accent-primary);
+        }
+
+        .commit-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .commit-details.show {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .commit-item {
+            background-color: #000000;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .commit-item:hover {
+            border-color: #3f3f46;
+            background-color: #0a0a0a;
+        }
+
+        .commit-item.hidden {
+            display: none;
+        }
+
+        .commit-search {
+            background-color: #000000;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            color: #fff;
+            font-size: 0.75rem;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .commit-search:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 1px var(--accent-primary);
+        }
+
+        .commit-search::placeholder {
+            color: #52525b;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
         }
 
         .progress-bar {
@@ -732,14 +794,20 @@
             const detailsContainer = document.getElementById('repo-details');
             detailsContainer.innerHTML = '';
 
-            stats.repo_details.forEach(repo => {
+            stats.repo_details.forEach((repo, index) => {
                 const card = document.createElement('div');
                 card.className = 'repo-card';
+                card.dataset.repoIndex = index;
+                
+                const commitDetails = repo.commit_details || [];
+                const hasCommits = commitDetails.length > 0;
+                
                 card.innerHTML = `
                     <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-1">
                             <i data-lucide="folder" class="w-4 h-4 text-yellow-400"></i>
                             <span class="font-bold text-white">${repo.name}</span>
+                            ${hasCommits ? `<i data-lucide="chevron-down" class="w-4 h-4 text-zinc-500 transition-transform expand-icon"></i>` : ''}
                         </div>
                         <span class="text-2xl font-bold text-yellow-400">${repo.percentage}%</span>
                     </div>
@@ -764,7 +832,84 @@
                             <span class="text-white font-mono ml-1">${repo.commits_with_ai}</span>
                         </div>
                     </div>
+                    ${hasCommits ? `
+                        <div class="commit-details" id="commits-${index}">
+                            <div class="mt-4 pt-3 border-t border-zinc-800">
+                                <div class="flex items-center gap-2 mb-2 text-xs text-zinc-400">
+                                    <i data-lucide="git-commit" class="w-3 h-3"></i>
+                                    <span>Commit 明细 (<span class="commit-count-${index}">${commitDetails.length}</span> 个)</span>
+                                </div>
+                                ${commitDetails.length > 5 ? `
+                                    <div class="mb-3" onclick="event.stopPropagation()">
+                                        <div class="relative">
+                                            <input 
+                                                type="text" 
+                                                class="commit-search" 
+                                                placeholder="搜索 commit ID 或消息..."
+                                                data-repo-index="${index}"
+                                                oninput="filterCommits(${index}, this.value)"
+                                            >
+                                            <div class="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                                <i data-lucide="search" class="w-3 h-3 text-zinc-500"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                <div class="space-y-2 max-h-96 overflow-y-auto commit-list-${index}">
+                                    ${commitDetails.map((commit, commitIndex) => `
+                                        <div class="commit-item" data-commit-sha="${commit.short_sha}" data-commit-message="${commit.message.toLowerCase()}">
+                                            <div class="flex items-start justify-between gap-2 mb-2">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="text-xs text-white font-medium truncate">${commit.message}</div>
+                                                    <div class="text-xs text-zinc-500 mt-1 flex items-center gap-2">
+                                                        <span class="font-mono">${commit.short_sha}</span>
+                                                        <span>·</span>
+                                                        <span>${commit.author}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right shrink-0">
+                                                    <div class="text-sm font-bold ${commit.ai_lines > 0 ? 'text-yellow-400' : 'text-zinc-500'}">${commit.percentage}%</div>
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-3 gap-2 text-xs">
+                                                <div>
+                                                    <span class="text-zinc-500">新增:</span>
+                                                    <span class="text-white font-mono ml-1">${commit.additions}</span>
+                                                </div>
+                                                <div>
+                                                    <span class="text-zinc-500">AI:</span>
+                                                    <span class="text-white font-mono ml-1">${commit.ai_lines}</span>
+                                                </div>
+                                                <div class="text-right">
+                                                    <span class="text-zinc-500">${new Date(commit.date).toLocaleDateString('zh-CN')}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                    <div class="no-results hidden" id="no-results-${index}">
+                                        <i data-lucide="search-x" class="w-4 h-4 inline-block mb-1 text-zinc-600"></i>
+                                        <div>未找到匹配的提交记录</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
                 `;
+                
+                // 添加点击事件
+                if (hasCommits) {
+                    // 只在卡片顶部区域（不包括commit明细区域）添加点击事件
+                    const topSection = card.querySelector('.flex.items-center.justify-between, .progress-bar, .grid.grid-cols-2');
+                    card.addEventListener('click', (e) => {
+                        // 如果点击的是commit明细区域内部，不触发
+                        const detailsEl = document.getElementById(`commits-${index}`);
+                        if (detailsEl && detailsEl.contains(e.target)) {
+                            return;
+                        }
+                        toggleCommitDetails(index);
+                    });
+                }
+                
                 detailsContainer.appendChild(card);
             });
 
@@ -772,6 +917,60 @@
 
             // 显示结果区域
             document.getElementById('result-section').classList.remove('hidden');
+        }
+
+        // 切换commit明细显示
+        function toggleCommitDetails(index) {
+            const detailsEl = document.getElementById(`commits-${index}`);
+            const card = document.querySelector(`[data-repo-index="${index}"]`);
+            const icon = card.querySelector('.expand-icon');
+            
+            if (detailsEl.classList.contains('show')) {
+                detailsEl.classList.remove('show');
+                card.classList.remove('expanded');
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            } else {
+                detailsEl.classList.add('show');
+                card.classList.add('expanded');
+                if (icon) icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // 过滤commit列表
+        function filterCommits(repoIndex, searchText) {
+            const listContainer = document.querySelector(`.commit-list-${repoIndex}`);
+            const commitItems = listContainer.querySelectorAll('.commit-item');
+            const noResults = document.getElementById(`no-results-${repoIndex}`);
+            const countEl = document.querySelector(`.commit-count-${repoIndex}`);
+            
+            const search = searchText.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            commitItems.forEach(item => {
+                const sha = item.dataset.commitSha.toLowerCase();
+                const message = item.dataset.commitMessage;
+                
+                if (search === '' || sha.includes(search) || message.includes(search)) {
+                    item.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+            
+            // 更新计数
+            if (countEl) {
+                countEl.textContent = visibleCount;
+            }
+            
+            // 显示/隐藏"未找到"提示
+            if (noResults) {
+                if (visibleCount === 0 && search !== '') {
+                    noResults.classList.remove('hidden');
+                } else {
+                    noResults.classList.add('hidden');
+                }
+            }
         }
 
         // Toast Notification

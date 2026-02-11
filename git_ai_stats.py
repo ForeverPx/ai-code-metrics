@@ -177,6 +177,7 @@ def calculate_ai_stats(repos, start_date, end_date):
                 'total_lines': 0,
                 'ai_lines': 0,
                 'percentage': 0,
+                'commit_details': []
             })
             continue
 
@@ -186,6 +187,7 @@ def calculate_ai_stats(repos, start_date, end_date):
         repo_total_lines = 0
         repo_ai_lines = 0
         repo_commits_with_ai = 0
+        commit_details = []
 
         for commit in commits:
             total_commits += 1
@@ -204,6 +206,19 @@ def calculate_ai_stats(repos, start_date, end_date):
                 if commit_ai_lines > 0:
                     repo_commits_with_ai += 1
 
+            # 保存每个commit的详细信息
+            commit_details.append({
+                'sha': commit_sha[:8],
+                'short_sha': commit_sha[:8],
+                'full_sha': commit_sha,
+                'message': commit.get('message', '').split('\n')[0][:100],
+                'author': commit.get('author_name', 'Unknown'),
+                'date': commit.get('created_at', ''),
+                'additions': additions,
+                'ai_lines': commit_ai_lines,
+                'percentage': round((commit_ai_lines / additions * 100) if additions > 0 else 0, 2)
+            })
+
         total_lines += repo_total_lines
         total_ai_lines += repo_ai_lines
         commits_with_ai += repo_commits_with_ai
@@ -218,7 +233,8 @@ def calculate_ai_stats(repos, start_date, end_date):
             'ratio_percent': round(repo_percentage, 2),
             'total_commits': len(commits),
             'commit_count': len(commits),
-            'commits_with_ai': repo_commits_with_ai
+            'commits_with_ai': repo_commits_with_ai,
+            'commit_details': commit_details
         })
 
     overall_percentage = (total_ai_lines / total_lines * 100) if total_lines > 0 else 0

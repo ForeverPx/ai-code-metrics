@@ -25,7 +25,7 @@ def index():
 
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
+    port = int(os.getenv('PORT', 8888))
     host = os.getenv('HOST', '0.0.0.0')
     print(f'Git AI 代码统计工具: http://{host}:{port}')
     app.run(debug=True, port=port, host=host)
