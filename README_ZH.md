@@ -2,8 +2,6 @@
 
 <img width="2120" height="1020" alt="image" src="https://github.com/user-attachments/assets/65e7f32d-9258-41d8-a4eb-3f0e91261f50" />
 
-![image.png](https://fastly.jsdelivr.net/gh/skrphp/img0@main/2026/02/11/1770802839516-16fc8961-170b-4a9e-9375-d878b512a00a.png)
-
 团队用了 Cursor、Copilot 等 AI 写代码，但说不清「到底多少代码是 AI 写的」。本工具基于 [git-ai](https://github.com/git-ai-project/git-ai) 写入的 Git Notes（`refs/notes/ai`），从 GitLab 拉取提交与 AI 归属数据，按时间范围、仓库或部门统计 **AI 代码占比**，用一张表、一张图把结果摊开，方便做复盘、汇报和趋势观察。
 
 **项目基于：[git-ai](https://github.com/git-ai-project/git-ai)**（追踪 AI 生成代码的 Git 扩展）及其 [Git AI Standard](https://github.com/git-ai-project/git-ai) 约定。
