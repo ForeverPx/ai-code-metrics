@@ -1,0 +1,36 @@
+README.md
+  4e622cc4157f076d 6,86-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "ca391bcca71b53f49de64e384e9e3f75680f336a",
+  "prompts": {
+    "4e622cc4157f076d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "86217e99-05f5-4fb7-ab04-adff97794963",
+        "model": "claude-4.5-sonnet-thinking"
+      },
+      "human_author": "panxiao <panxiao@cvte.com>",
+      "messages": [],
+      "total_additions": 256,
+      "total_deletions": 108,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "e53e519415b59a5b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "76705131-e5ac-4914-a4b3-d5823bc9044c",
+        "model": "claude-4.5-sonnet-thinking"
+      },
+      "human_author": "panxiao <panxiao@cvte.com>",
+      "messages": [],
+      "total_additions": 123,
+      "total_deletions": 2,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
