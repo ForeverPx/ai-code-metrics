@@ -1,0 +1,42 @@
+README_ZH.md
+  4e622cc4157f076d 14-15,87,89-113,125,132-133
+git_ai_stats.py
+  4e622cc4157f076d 180,212,214-216,219,237
+  e53e519415b59a5b 190,209-211,213,217-218,220-221,236
+index.html
+  e53e519415b59a5b 247,255-264,268-270,272-274,276-280
+  4e622cc4157f076d 265-267,271,275,281,284-315,797,800-804,807,810,835-896,898-912,922-936,939-975
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "7214471999f84de13f832bcd1c3c508a1e1a686b",
+  "prompts": {
+    "4e622cc4157f076d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "86217e99-05f5-4fb7-ab04-adff97794963",
+        "model": "claude-4.5-sonnet-thinking"
+      },
+      "human_author": "panxiao <panxiao@cvte.com>",
+      "messages": [],
+      "total_additions": 256,
+      "total_deletions": 108,
+      "accepted_lines": 213,
+      "overriden_lines": 0
+    },
+    "e53e519415b59a5b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "76705131-e5ac-4914-a4b3-d5823bc9044c",
+        "model": "claude-4.5-sonnet-thinking"
+      },
+      "human_author": "panxiao <panxiao@cvte.com>",
+      "messages": [],
+      "total_additions": 123,
+      "total_deletions": 2,
+      "accepted_lines": 32,
+      "overriden_lines": 0
+    }
+  }
+}
