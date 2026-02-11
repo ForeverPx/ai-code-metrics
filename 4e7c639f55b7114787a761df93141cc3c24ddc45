@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "4e7c639f55b7114787a761df93141cc3c24ddc45",
+  "prompts": {
+    "a1c12dc617d7a62f": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "2236cb3a-9804-4182-ae08-911f178c5811",
+        "model": "claude-4.5-sonnet-thinking"
+      },
+      "human_author": "panxiao <panxiao@cvte.com>",
+      "messages": [],
+      "total_additions": 688,
+      "total_deletions": 0,
+      "accepted_lines": 688,
+      "overriden_lines": 0
+    }
+  }
+}
